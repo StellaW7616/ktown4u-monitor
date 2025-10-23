@@ -109,12 +109,12 @@ def log_sales_change(product_name, old_sales, new_sales, change):
         file_exists = os.path.exists(LOG_FILE)
         with open(LOG_FILE, 'a', encoding='utf-8', newline='') as f:
             if not file_exists:
-                f.write("时间,商品名称,原始销量,校正销量,原始变化,校正变化\n")
+                f.write("时间,商品名称,前原始销量,前校正销量,原始变化,现原始销量,现校正销量,校正变化\n")
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             old_corrected = correct_sales(old_sales)
             new_corrected = correct_sales(new_sales)
             change_corrected = new_corrected - old_corrected
-            f.write(f"{timestamp},{product_name},{new_sales},{new_corrected},{change},{change_corrected}\n")
+            f.write(f"{timestamp},{product_name},{old_sales},{old_corrected},{change},{new_sales},{new_corrected},{change_corrected}\n")
     except Exception as e:
         print(f"  ⚠️ 保存日志失败: {e}")
 
