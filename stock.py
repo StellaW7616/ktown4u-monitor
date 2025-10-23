@@ -92,14 +92,29 @@ def extract_info(html):
     except:
         return None, None
 
+def correct_sales(raw_sales):
+    """
+    数据校正函数
+    1. 每满3本多算1本，所以需要除以 1.33 或乘以 0.75
+    2. 负数表示卖出，需要转换为正数
+    """
+    # 取绝对值（因为负数表示卖出）
+    corrected = abs(raw_sales)
+    # 除以 1.33 来去掉水分（每3本多算1本 = 4本中3本是真实的）
+    corrected = corrected * 3 // 4
+    return corrected
+
 def log_sales_change(product_name, old_sales, new_sales, change):
     try:
         file_exists = os.path.exists(LOG_FILE)
         with open(LOG_FILE, 'a', encoding='utf-8', newline='') as f:
             if not file_exists:
-                f.write("时间,商品名称,前销量,现销量,变化量\n")
+                f.write("时间,商品名称,原始销量,校正销量,原始变化,校正变化\n")
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"{timestamp},{product_name},{old_sales},{new_sales},{change}\n")
+            old_corrected = correct_sales(old_sales)
+            new_corrected = correct_sales(new_sales)
+            change_corrected = new_corrected - old_corrected
+            f.write(f"{timestamp},{product_name},{new_sales},{new_corrected},{change},{change_corrected}\n")
     except Exception as e:
         print(f"  ⚠️ 保存日志失败: {e}")
 
@@ -139,17 +154,27 @@ for group_name, group_urls in product_groups.items():
     
     # 显示和记录结果
     if all_loaded and product_name:
+        # 校正销量数据
+        total_sales_corrected = correct_sales(total_sales)
+        
         if group_name not in last_quantities or last_quantities[group_name] is None:
-            print(f"\n  ✅ [{product_name}] 总销量: {total_sales}\n")
+            print(f"\n  ✅ [{product_name}]")
+            print(f"     原始销量: {total_sales}")
+            print(f"     校正销量: {total_sales_corrected}\n")
             last_quantities[group_name] = total_sales
         elif last_quantities[group_name] != total_sales:
             change = total_sales - last_quantities[group_name]
+            change_corrected = correct_sales(total_sales) - correct_sales(last_quantities[group_name])
             direction = "📈" if change < 0 else "📉"
-            print(f"\n  🔔 [{product_name}] 销量变化: {last_quantities[group_name]} → {total_sales} ({direction} {abs(change)})\n")
+            print(f"\n  🔔 [{product_name}]")
+            print(f"     原始变化: {last_quantities[group_name]} → {total_sales} ({direction} {abs(change)})")
+            print(f"     校正变化: {correct_sales(last_quantities[group_name])} → {total_sales_corrected} ({abs(change_corrected)})\n")
             log_sales_change(product_name, last_quantities[group_name], total_sales, change)
             last_quantities[group_name] = total_sales
         else:
-            print(f"\n  🔹 [{product_name}] 总销量: {total_sales}\n")
+            print(f"\n  🔹 [{product_name}]")
+            print(f"     原始销量: {total_sales}")
+            print(f"     校正销量: {total_sales_corrected}\n")
         
         save_history(last_quantities)
 
