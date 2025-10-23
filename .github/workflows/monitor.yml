@@ -1,0 +1,34 @@
+name: Ktown4u Monitor
+
+on:
+  schedule:
+    # 每 5 分钟运行一次（UTC 时间）
+    - cron: '*/10 * * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      
+    - name: 设置 Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: 安装依赖
+      run: pip install -r requirements.txt
+    
+    - name: 运行监控脚本
+      run: python stock.py
+      
+    - name: 提交更改
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git commit -m "自动更新: $(date '+%Y-%m-%d %H:%M:%S')" || echo "没有变化"
+        git push
