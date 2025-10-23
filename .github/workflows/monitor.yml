@@ -1,5 +1,8 @@
 name: Ktown4u Monitor
 
+permissions:
+  contents: write
+
 on:
   schedule:
     # 每 5 分钟运行一次（UTC 时间）
