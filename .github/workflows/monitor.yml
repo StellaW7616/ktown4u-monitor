@@ -6,7 +6,7 @@ permissions:
 on:
   schedule:
     # 每 5 分钟运行一次（UTC 时间）
-    - cron: '*/10 * * * *'
+    - cron: '*/1 * * * *'
   workflow_dispatch:  # 允许手动触发
 
 jobs:
